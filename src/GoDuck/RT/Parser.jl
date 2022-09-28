@@ -15,23 +15,34 @@ using ...Femtoparsec.Lexer
 
   NOTE: `f::Function` has to be a `@parser` or `@lexeme` decorated function
   """
-parseGoDuck(io::IO, f::Function, args...; kwargs...
-)::Tuple{Union{GoDuckExpr,Unmet},Vector{Diagnosis}} =
-  femtoParse(LexInProgress(lex(io)), f, args...; kwargs...)
+parseGoDuck(io::IO)::Tuple{Union{GoDuckExpr,Unmet},Vector{Diagnosis}} =
+  femtoParse(LexInProgress(lex(io)), topExpr)
 
 """    parse the specified string with a `@parser function`
 
 NOTE: `f::Function` has to be a `@parser` or `@lexeme` decorated function
 """
-parseGoDuck(str::AbstractString, f::Function, args...; kwargs...
-)::Tuple{Union{GoDuckExpr,Unmet},Vector{Diagnosis}} =
-  femtoParse(LexInProgress(lex(str)), f, args...; kwargs...)
+parseGoDuck(str::AbstractString)::Tuple{Union{GoDuckExpr,Unmet},Vector{Diagnosis}} =
+  femtoParse(LexInProgress(lex(str)), topExpr)
 
 
 @lexeme function comma()
   @expectToken OperId(",")
 end
 
+
+@parser function topExpr()::Union{GoDuckExpr,Unmet}
+  @sc
+  @choiceFor("Toplevel Expression",
+    @parse(importExpr()),
+    @parse(arithExpr()),
+  )
+end
+
+
+@lexeme function importExpr()::Union{ImportExpr,Unmet}
+
+end
 
 
 
