@@ -379,8 +379,9 @@ mutable struct LexItState
   line::Int
   char::Int
   wip::Union{CommentWIP,StringWIP,TokenWIP,Nothing}
+  passed_eof::Bool
   LexItState(line_it::Any, line_str::String) = new(
-    line_it, line_str, firstindex(line_str), 1, 0, nothing)
+    line_it, line_str, firstindex(line_str), 1, 0, nothing, false)
 end
 
 
@@ -402,7 +403,9 @@ function Base.iterate(
   local lis::LexItState = if lis_arg === nothing
     let first_line = Base.iterate(lexer.lines)
       if first_line === nothing
-        return nothing
+        lis = LexItState(nothing, "")
+        lis.passed_eof = true
+        return (EOF(), NilRange), lis
       end
       line_val, line_it = first_line
       LexItState(line_it, string(line_val))
@@ -410,6 +413,10 @@ function Base.iterate(
   else
     lis_arg
   end
+  if lis.passed_eof
+    return nothing
+  end
+
   local wip = nothing # `wip` will repeatedly alias (possibly updated) `lis.wip` per loop iterations
 
   # some helper functions, they enclose `lis` and `wip` so have to live inside
@@ -583,6 +590,9 @@ function Base.iterate(
 
   # the main loop
   while true
+    if lis.passed_eof
+      return nothing
+    end
     if lis.line_str === nothing
       let next_line = Base.iterate(lexer.lines, lis.line_it)
         if next_line === nothing
@@ -602,7 +612,9 @@ function Base.iterate(
               @assert false "non-exhaustive handling of wip types"
             end
           end
-          return nothing
+          lis.passed_eof = true
+          eof_pos = SrcPosition(lis.line, lis.char)
+          return (EOF(), SrcRange(eof_pos, eof_pos)), lis
         end
         line_val, lis.line_it = next_line
         lis.line_str = string(line_val) # make sure be of Julia String, i.e. w/ utf8 storage

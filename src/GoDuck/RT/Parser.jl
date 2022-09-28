@@ -32,15 +32,35 @@ end
 
 
 @parser function topExpr()::Union{GoDuckExpr,Unmet}
+  steps = GoDuckExpr[]
   @sc
-  @choiceFor("Toplevel Expression",
-    @parse(importExpr()),
-    @parse(arithExpr()),
-  )
+  (_, first_span) = @tokenAhead()
+  while true
+    if @tokAhead() isa EOF
+      full_span = SrcLocation(first_span.start, @lastPos())
+      if isempty(steps)
+        return ExpectTerms(full_span, "Some Toplevel Expression")
+      end
+      if length(steps) == 1
+        return steps[1]
+      end
+      return Sequential(steps, full_span)
+    end
+    push!(steps, @choiceFor("Toplevel Expression",
+      @parse(importExpr()),
+      @parse(arithExpr()),
+    ))
+  end
+  @assert false "bug: never encounter EOF?!"
 end
 
 
 @lexeme function importExpr()::Union{ImportExpr,Unmet}
+  @expectToken AlphaId("import")
+  @sc
+  spec = @expectTokenOf LitStr
+  # ...
+  return spec.value
 
 end
 

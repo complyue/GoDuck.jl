@@ -201,25 +201,31 @@ macro lastTok()
   end
 end
 
+macro lastPos()
+  return quote
+    @lastToken()[2]
+  end
+end
+
 
 function _fetchNextToken()
   return quote
     if pip.nxi[] > length(pip.btv)
-      @assert pip.nxi[] == length(pip.btv) + 1 "went too far?!"
-      tok = EOF(), NilRange
+      @assert pip.nxi[] == length(pip.btv) + 1 "bug: went too far?!"
+      tok_n_span = EOF(), NilRange
       next_tok = if isassigned(pip.lip.lis)
         Base.iterate(pip.lip.lexer, pip.lip.lis[])
       else
         Base.iterate(pip.lip.lexer)
       end
       if next_tok !== nothing
-        tok, pip.lip.lis[] = next_tok::Tuple{Tuple{Token,SrcRange},Any}
+        tok_n_span, pip.lip.lis[] = next_tok::Tuple{Tuple{Token,SrcRange},Any}
       end
-      push!(pip.btv, tok)
+      push!(pip.btv, tok_n_span)
     end
     @assert(
       1 <= pip.nxi[] <= length(pip.btv),
-      "not so expected ParseInProgress situation nxi=$(pip.nxi[]) vs $(length(pip.btv))"
+      "bug: not so expected ParseInProgress situation nxi=$(pip.nxi[]) vs $(length(pip.btv))"
     )
     @inbounds pip.btv[pip.nxi[]]
   end

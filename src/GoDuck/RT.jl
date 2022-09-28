@@ -24,6 +24,9 @@ include("./RT/vocab.jl")
 export UAID, AttrKey, KwArgs, ArgsPack, take, @uaid
 include("./RT/attrs.jl")
 
+export ValueExpr, QtyExpr, AddrExpr, AttrExpr, DotExpr
+export BlockExpr, Sequential, ScopedSeq
+# @todo export more ...
 include("./RT/ast.jl")
 
 export Entity, nil
