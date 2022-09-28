@@ -1,4 +1,24 @@
 
+# root type of lexical tokens
+abstract type Token end
+
+# end of file as a special token
+struct EOF <: Token end
+
+# root type of white spaces
+abstract type WhiteSpace <: Token end
+
+# root type of non-white-space tokens
+abstract type Phrase <: Token end
+
+# root type of identifiers
+# including operators (notably +-*/), even colons (:), and commas (,) and semicolons (;)
+abstract type Identifier <: Phrase end
+
+# root type of numerical literals
+abstract type LitNumber <: Phrase end
+
+
 """    for special perser procedure return value, stating unmet expectations
 """
 abstract type Unmet <: Diagnosis end
@@ -16,7 +36,7 @@ struct ExpectTerms <: Unmet
   ExpectTerms(span::SrcRange, terms::Vector{String}, suggs::Vector{String}) = new(span, terms, suggs)
 end
 
-RT.diagWhere(x::ExpectTerms) = x.span
+diagWhere(x::ExpectTerms) = x.span
 
 
 struct ExpectBracketOpen <: Unmet
@@ -25,7 +45,7 @@ struct ExpectBracketOpen <: Unmet
   mod::String
 end
 
-RT.diagWhere(x::ExpectBracketOpen) = x.span
+diagWhere(x::ExpectBracketOpen) = x.span
 
 
 struct ExpectBracketClose <: Incomplete
@@ -34,7 +54,7 @@ struct ExpectBracketClose <: Incomplete
   mod::String
 end
 
-RT.diagWhere(x::ExpectBracketClose) = x.span
+diagWhere(x::ExpectBracketClose) = x.span
 
 
 struct LexInProgress

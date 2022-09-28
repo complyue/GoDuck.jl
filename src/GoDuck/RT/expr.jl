@@ -18,10 +18,7 @@ function expr_src(::IO, x::GoDuckExpr)::Nothing
 end
 
 
-# root type for syntax tree nodes
-abstract type SynNode <: GoDuckExpr end
-
-struct WithSpan{T} <: SynNode where {T<:SynNode}
+struct WithSpan{T} <: GoDuckExpr where {T<:GoDuckExpr}
   expr::T
   span::SrcRange
 end

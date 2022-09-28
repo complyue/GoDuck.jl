@@ -1,9 +1,6 @@
 
 module Lexer
 
-using ...RT
-
-
 export bracket_pair, is_bracket_modifier_char
 export is_operator_char, is_name_start_char, is_name_part_char, is_uom_char
 export LexIt, lex
@@ -12,6 +9,8 @@ export WhiteSpace, SPC, SPC1, SPCN, TAB, TAB1, TABN, LBR, LBR1, LBRN, Comment
 export Phrase, LitStr, Open, Close
 export Identifier, AlphaId, OperId
 export LitNumber, LitInt, LitHex, LitQty
+
+using ..Femtoparsec
 
 
 bracket_pair(::Val{'{'})::Tuple{Char,Char} = '{', '}'
@@ -47,7 +46,7 @@ is_bracket_modifier_char(::Val{')'}, c::Char)::Bool =
   is_bracket_modifier_char(Val('('), c)
 function is_bracket_modifier_char(::Val{'('}, c::Char)::Bool
   c in (
-    '.', '=',
+    '.', '=', '-', '+',
     '!', '$', '%', '^',
     '&', '|', ':', '?',
   )
@@ -75,13 +74,25 @@ function is_operator_char(c::Char)::Bool
 end
 
 
+function is_suffix_op_char(c::Char)::Bool
+  if c == '\''
+    # Julia sees single quote immediately following an identifier as invoking the `adjoint` operation
+    # @note Julia doesn't think fancier (consists of more chars) suffix operators those started with a single quote could exist, e.g. it parses `A'*2` as `(A)(')(*)(2)`
+    #       while here we'll spit out tokens `(A)('*)(2)` from the example above.
+    # @todo something different here?
+    return true
+  end
+  return is_operator_char(c)
+end
+
+
 function is_name_start_char(c::Char)::Bool
   c in ('_',) || Base.Unicode.isletter(c)
 end
 
 function is_name_part_char(c::Char)::Bool
-  # (!) allowed following Julia, (') allowed following Haskell
-  c in ('_', '!', '\'') || Base.Unicode.isletter(c) || Base.Unicode.isnumeric(c)
+  # (!) allowed following Julia
+  c in ('_', '!') || Base.Unicode.isletter(c) || Base.Unicode.isnumeric(c)
 end
 
 
@@ -236,6 +247,8 @@ end
 accept_one_more(t::AlphaId, c::Char) =
   if is_name_part_char(c)
     ContinueToken(AlphaId(t.id * c))
+  elseif is_suffix_op_char(c)
+    SplitToken(t, OperId(string(c)))
   else
     nothing
   end
@@ -251,11 +264,10 @@ accept_one_more(t::OperId, c::Char) =
     if all(oc -> is_bracket_modifier_char(Val(c), oc), t.id)
       DoneToken(Close(c, t.id))
     else # not all op chars satisfying `is_bracket_modifier_char()`,
-      # todo: give as much satisfying chars at rhs of `t.id` to `Close` token?
-      #       remind: the start/end position of the split tokens need more nontrivial work to get correct
-      #       anyway the end programmer should always make it match the opening bracket w.r.t. modifier,
-      #       and be adviced to insert some space separater if it do follow some `OperId` token,
-      #       we just make that separater space token mandatory, by far, as impl. here
+      # @todo give as much satisfying chars at rhs of `t.id` to `Close` token?
+      #= @remind
+       the start/end position of the split tokens need more nontrivial work to get correct, anyway the end programmer should always make it match the opening bracket w.r.t. modifier, and be adviced to insert some space separater if it do follow some `OperId` token, we just make that separater space token mandatory, by far, as impl. here
+      =#
       SplitToken(t, Close(c, ""))
     end
   elseif isdigit(c)
@@ -329,7 +341,8 @@ Base.eltype(::Type{LexIt}) = Tuple{Token,SrcRange}
 # implementation details to be hidden deeper inside this Lexer module
 module LexItDetails
 
-using ....RT
+using ...Femtoparsec
+using ....Diag
 
 using ..Lexer: is_operator_char, is_name_start_char, is_name_part_char, is_uom_char
 using ..Lexer: DoneToken, ContinueToken, SplitToken, accept_one_more

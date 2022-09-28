@@ -10,6 +10,14 @@ Performance is not a focus by far, but with Julia under the hood, there seems ev
 
 """
 
+export Diagnosis, diagWhere, Error, Warn, Hint
+using ..Diag
+
+
+export Token, EOF, UnexpectedToken, WhiteSpace, Phrase, Identifier, LitNumber
+include("./Femtoparsec/parsing.jl")
+
+
 export LexInProgress, femtoParse, @parse, @parser, @lexeme, @sc
 export @lastTok, @lastToken, @tokAhead, @nextTok, @tokenAhead, @nextToken, @diagWith
 export @expectTokenOf, @expectToken
@@ -17,14 +25,7 @@ export @expect, @maybe, @expectZeroOrMore, @expectOneOrMore, @choiceFor
 export Unmet, Incomplete, ExpectTerms, ExpectBracketOpen, ExpectBracketClose
 
 
-export Diagnosis, diagWhere, Error, Warn, Hint
-using ...RT
-
-
-include("./Femtoparsec/parsing.jl")
-
-
-#=note
+#= @note
   following submodules (i.e. Lexer and Combinators) can actually standalone, they are put here merely for namespacing purpose.
 
   alternative lexer and combinator-collection modules can be authored by 3rd party likewise.

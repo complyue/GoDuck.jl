@@ -7,9 +7,9 @@ using REPL.LineEdit
 using ReplMaker
 
 using ..Femtoparsec
-using ..Compiler
+using ..RT
 
-using ..Compiler.Parser: cognProc # TODO: temp test purpose
+using ..RT.Parser: cognProc # TODO: temp test purpose
 
 
 function __init__()
@@ -18,12 +18,12 @@ function __init__()
     return
   end
 
-  function parse_julie(src::AbstractString)::Tuple{Union{Any,Unmet},Vector{Diagnosis}}
+  function parseGoDuckTop(src::AbstractString)::Tuple{Union{Any,Unmet},Vector{Diagnosis}}
     parseGoDuck(src, cognProc) # TODO: use proper @parser function
   end
 
-  function eval_julie(s)
-    result, problems = parse_julie(s)
+  function evalGoDuck(s)
+    result, problems = parseGoDuckTop(s)
     if !isempty(problems)
       io = IOContext(stderr, :compact => true)
       for p in problems
@@ -34,18 +34,18 @@ function __init__()
     print(IOContext(stdout, :compact => true), result)
   end
 
-  function is_complete_julie(s)
+  function isCompleteGoDuck(s)
     input = String(take!(copy(LineEdit.buffer(s))))
-    _result, problems = parse_julie(input)
+    _result, problems = parseGoDuckTop(input)
     return !any(problem -> problem isa Incomplete, problems)
   end
 
-  initrepl(eval_julie,
-    prompt_text="julie> ",
+  initrepl(evalGoDuck,
+    prompt_text="goduck> ",
     prompt_color=49,
     start_key='}',
     mode_name="GoDuck",
-    valid_input_checker=is_complete_julie,
+    valid_input_checker=isCompleteGoDuck,
   )
 
 end

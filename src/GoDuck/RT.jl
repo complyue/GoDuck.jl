@@ -6,12 +6,17 @@ using UUIDs
 using ..Utils
 
 
-export SrcPosition, SrcRange, SrcLocation, NilPosition, NilRange
 export Token, EOF, WhiteSpace, Phrase, Identifier, LitNumber
-export Diagnosis, diagWhere, Error, Warn, Hint
-include("./RT/roots.jl")
+using ..Femtoparsec
 
-export GoDuckExpr, expr_src, SynNode
+
+export SrcPosition, SrcRange, SrcLocation, NilPosition, NilRange
+export SyntaxError, SyntaxWarn
+export Diagnosis, diagWhere, Error, Warn, Hint
+using ..Diag
+
+
+export GoDuckExpr, expr_src
 include("./RT/expr.jl")
 
 include("./RT/vocab.jl")
@@ -27,6 +32,11 @@ include("./RT/scope.jl")
 include("./RT/modu.jl")
 
 include("./RT/exec.jl")
+
+
+export parseGoDuck
+include("./RT/Parser.jl")
+using .Parser
 
 
 end # module GoDuck.RT
