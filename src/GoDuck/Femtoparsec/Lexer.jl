@@ -290,8 +290,10 @@ struct LitInt <: LitNumber
   digits::String
 end
 accept_one_more(t::LitInt, c::Char) =
-  if Base.Unicode.isdigit(c)
-    ContinueToken(LitInt(false, t.digits * c))
+  if c == '_' # for ease of eye, to see long literal numbers
+    ContinueToken(t)
+  elseif Base.Unicode.isdigit(c)
+    ContinueToken(LitInt(t.negative, t.digits * c))
   elseif c in ('x', 'X') && !t.negative && t.digits === "0"
     ContinueToken(LitHex(""))
   elseif is_uom_char(c)
