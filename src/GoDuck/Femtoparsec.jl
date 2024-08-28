@@ -19,7 +19,7 @@ include("./Femtoparsec/parsing.jl")
 
 
 export LexInProgress, femtoParse, @parse, @parser, @lexeme, @sc
-export @lastTok, @lastToken, @tokAhead, @nextTok, @tokenAhead, @nextToken, @diagWith
+export @lastTok, @lastPos, @lastToken, @tokAhead, @nextTok, @tokenAhead, @nextToken, @diagWith
 export @expectTokenOf, @expectToken
 export @expect, @maybe, @expectZeroOrMore, @expectOneOrMore, @choiceFor
 export Unmet, Incomplete, ExpectTerms, ExpectBracketOpen, ExpectBracketClose
